@@ -31,23 +31,60 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 const camConstraint = {
   video: {
     frameRate: 30,
+    // facingMode: { exact: 'environment' },
     facingMode: { exact: 'user' },
     width: 720,
     height: 480,
-    vb: true,
-    vbBackgroundImage: require("./assets/1.jpg"),
-    vbFrameSkip: 0
+    // vbBackgroundImage: require("./assets/1.jpg"),
+    vbFrameSkip: 0,
+    vbBlurValue: 13
   }
 }
 
+enum VB_IMAGE_TYPE {
+  None,
+  Blur,
+  Image
+}
 
-const Image_Uris = [
-  require("./assets/1.jpg"),
-  require("./assets/2.jpg"),
-  require("./assets/3.jpg"),
-  require("./assets/4.jpg"),
-  require("./assets/5.jpg"),
-  require("./assets/6.png")
+const VB_Image_Data = [
+
+  {
+    type: VB_IMAGE_TYPE.Blur,
+    value: 5,
+    text: 'Blur',
+    imgData: require("./assets/7.png")
+  },
+  {
+    type: VB_IMAGE_TYPE.Blur,
+    value: 13,
+    text: 'Very Blur',
+    imgData: require("./assets/7.png")
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/1.jpg"),
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/2.jpg"),
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/3.jpg"),
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/4.jpg"),
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/5.jpg"),
+  },
+  {
+    type: VB_IMAGE_TYPE.Image,
+    imgData: require("./assets/6.png"),
+  },
 ]
 
 
@@ -84,6 +121,8 @@ const App = () => {
   const stop = async () => {
     if (stream) {
       setStream(null);
+      setVbStatus(false)
+      setVbFrameSkip(0)
     }
   };
 
@@ -94,12 +133,25 @@ const App = () => {
     if (vidTracks.length > 0) vidTracks[0]._changeVBImage(imgRequire);
   }
 
+  function changeVbBlurValue(blurValue: number = 0) {
+    if (!stream) return;
+
+    let vidTracks = stream.getVideoTracks();
+    if (vidTracks.length > 0) vidTracks[0]._changeVBBlurValue(blurValue);
+  }
+
   function changeVbFrameSkip(vbFrameSkip: number): void {
     let vidTracks = stream.getVideoTracks();
     if (vidTracks.length > 0) vidTracks[0]._changeVBFrameSkip(vbFrameSkip);
     setVbFrameSkip(vbFrameSkip);
   }
 
+  function switchCamera() {
+    if (!stream) return;
+
+    let vidTracks = stream.getVideoTracks();
+    if (vidTracks.length > 0) vidTracks[0]._switchCamera();
+  }
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -140,9 +192,16 @@ const App = () => {
               persistentScrollbar={true} >
 
               {
-                Image_Uris.map((data, index) => <TouchableOpacity key={index} onPress={() => { changeVbImage(data); }}>
-                  <Image key={index} source={data}
+                VB_Image_Data.map((data, index) => <TouchableOpacity key={index} onPress={() => {
+                  if (data.type === VB_IMAGE_TYPE.Blur) changeVbBlurValue(data.value)
+                  else changeVbImage(data.imgData);
+                }}>
+                  <Image key={index} source={data.imgData}
                     style={{ width: 100, height: 100, marginHorizontal: 10 }} />
+                  {
+                    data.type === VB_IMAGE_TYPE.Blur &&
+                    <Text style={{ fontSize: 12, fontWeight: "500", alignSelf:"center" }}> {data.text}</Text>
+                  }
                 </TouchableOpacity>)
               }
 
@@ -167,6 +226,17 @@ const App = () => {
               </View>
             </TouchableOpacity>
           }
+
+          {stream &&
+            <TouchableOpacity onPress={() => {
+              if (!stream) return;
+              switchCamera();
+            }}>
+              <View style={[styles.btn, stream ? styles.active : styles.inactive]}>
+                <Text style={styles.btnTxt}>{'Switch'}</Text>
+              </View>
+            </TouchableOpacity>
+          }
         </View>
       </View>
     </SafeAreaView>
@@ -177,7 +247,7 @@ const styles = StyleSheet.create({
   body: { backgroundColor: 'white' },
   stream: { flex: 1, padding: 44 },
   footer: { width: '100%', padding: 30, display: "flex", flexDirection: "row", justifyContent: "space-between" },
-  btn: { paddingHorizontal: 50, paddingVertical: 10, borderRadius: 5 },
+  btn: { paddingHorizontal: 20, paddingVertical: 5, borderRadius: 5 },
   btnTxt: { color: Colors.white, textAlign: 'center', fontSize: 20 },
   active: { backgroundColor: 'green' },
   inactive: { backgroundColor: '#454545' }
