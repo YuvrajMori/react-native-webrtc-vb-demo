@@ -12,7 +12,7 @@
   "dependencies": {
     "react": "18.1.0",
     "react-native": "0.70.6",
-    "react-native-webrtc":"Yuvraj-Mori/React-Native-Webrtc-VB#custom-vb-image"
+    "react-native-webrtc": "YuvrajMori/react-native-webrtc-vb#reactNativeVB"
   },
   "devDependencies": {
     "@babel/core": "^7.12.9",
